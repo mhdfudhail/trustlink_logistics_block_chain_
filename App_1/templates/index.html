@@ -1,0 +1,125 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Temperature & Humidity Blockchain</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            margin-top: 20px;
+            height: 400px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Temperature & Humidity Blockchain Dashboard</h1>
+        <div class="chart-container">
+            <canvas id="tempHumidityChart"></canvas>
+        </div>
+        <div id="blockchainData"></div>
+    </div>
+
+    <script>
+        let chart;
+
+        function updateData() {
+            fetch('/get_data')
+                .then(response => response.json())
+                .then(data => {
+                    updateChart(data);
+                    updateTable(data);
+                });
+        }
+
+        function updateChart(data) {
+            const timestamps = data.map(block => block.timestamp);
+            const temperatures = data.map(block => block.data.temp);
+            const humidity = data.map(block => block.data.humidity);
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            chart = new Chart(document.getElementById('tempHumidityChart'), {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: temperatures,
+                        borderColor: 'rgb(255, 99, 132)',
+                        fill: false
+                    }, {
+                        label: 'Humidity (%)',
+                        data: humidity,
+                        borderColor: 'rgb(54, 162, 235)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function updateTable(data) {
+            const tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Temperature</th>
+                            <th>Humidity</th>
+                            <th>Block Hash</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(block => `
+                            <tr>
+                                <td>${block.timestamp}</td>
+                                <td>${block.data.temp}°C</td>
+                                <td>${block.data.humidity}%</td>
+                                <td>${block.hash}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('blockchainData').innerHTML = tableHtml;
+        }
+
+        // Update data every 60 seconds
+        setInterval(updateData, 10000);
+        // Initial update
+        updateData();
+    </script>
+</body>
+</html>

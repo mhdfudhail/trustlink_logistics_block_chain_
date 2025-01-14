@@ -1,0 +1,152 @@
+[
+  {
+    "timestamp": "2025-01-14T20:07:25.808553",
+    "data": {
+      "data": {
+        "temp": 20.0,
+        "humidity": 50.0
+      },
+      "timestamp": "2025-01-14T20:07:25.808553",
+      "status": "Normal conditions",
+      "alerts": []
+    },
+    "previous_hash": "0",
+    "hash": "842facd63df023f940c258c466068c86c4b8499c3c3a4347cca91a0627432a52",
+    "nonce": 0
+  },
+  {
+    "timestamp": "2025-01-14T20:07:25.813183",
+    "data": {
+      "data": {
+        "temp": 1,
+        "humidity": 2
+      },
+      "timestamp": "2025-01-14T20:07:25.813183",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "842facd63df023f940c258c466068c86c4b8499c3c3a4347cca91a0627432a52",
+    "hash": "473e339d1cf1d8851568fa066cf684cb22b9e0c7d3c867ef88b621c26cb9c4a0",
+    "nonce": 0
+  },
+  {
+    "timestamp": "2025-01-14T20:07:27.178933",
+    "data": {
+      "data": {
+        "temp": 1,
+        "humidity": 2
+      },
+      "timestamp": "2025-01-14T20:07:27.178933",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "473e339d1cf1d8851568fa066cf684cb22b9e0c7d3c867ef88b621c26cb9c4a0",
+    "hash": "00fe8da415924defd69e9a789666d554ce0eac1445a11abe7be348aff9c3302d",
+    "nonce": 531
+  },
+  {
+    "timestamp": "2025-01-14T20:07:37.189562",
+    "data": {
+      "data": {
+        "temp": 2,
+        "humidity": 4
+      },
+      "timestamp": "2025-01-14T20:07:37.189562",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "00fe8da415924defd69e9a789666d554ce0eac1445a11abe7be348aff9c3302d",
+    "hash": "005018ab9f5345204e13b2c1a78ec138863c538589a077cbc79c9bf78381d699",
+    "nonce": 99
+  },
+  {
+    "timestamp": "2025-01-14T20:07:47.202797",
+    "data": {
+      "data": {
+        "temp": 3,
+        "humidity": 6
+      },
+      "timestamp": "2025-01-14T20:07:47.202797",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "005018ab9f5345204e13b2c1a78ec138863c538589a077cbc79c9bf78381d699",
+    "hash": "0014bf837943d53fb69591bf1ad5bb6c5065f11093979e23de9e035898bc45fa",
+    "nonce": 14
+  },
+  {
+    "timestamp": "2025-01-14T20:07:57.223521",
+    "data": {
+      "data": {
+        "temp": 4,
+        "humidity": 8
+      },
+      "timestamp": "2025-01-14T20:07:57.223521",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "0014bf837943d53fb69591bf1ad5bb6c5065f11093979e23de9e035898bc45fa",
+    "hash": "00ddcb106601538c5832c03a2cbee88f2376e7abd73ae9e4d4f85e11b4f4ec3b",
+    "nonce": 528
+  },
+  {
+    "timestamp": "2025-01-14T20:08:07.244790",
+    "data": {
+      "data": {
+        "temp": 5,
+        "humidity": 10
+      },
+      "timestamp": "2025-01-14T20:08:07.244790",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "00ddcb106601538c5832c03a2cbee88f2376e7abd73ae9e4d4f85e11b4f4ec3b",
+    "hash": "0060d764c68432770aff411235e802c6ff75829c28643e3c03b9e8ce3199d19d",
+    "nonce": 168
+  },
+  {
+    "timestamp": "2025-01-14T20:08:17.255712",
+    "data": {
+      "data": {
+        "temp": 6,
+        "humidity": 12
+      },
+      "timestamp": "2025-01-14T20:08:17.255712",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "0060d764c68432770aff411235e802c6ff75829c28643e3c03b9e8ce3199d19d",
+    "hash": "00cd90d8509fdefff8966ba238dd3459df50babd2706248b1f131744ccc1cce8",
+    "nonce": 414
+  },
+  {
+    "timestamp": "2025-01-14T20:08:27.312566",
+    "data": {
+      "data": {
+        "temp": 7,
+        "humidity": 14
+      },
+      "timestamp": "2025-01-14T20:08:27.312566",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "00cd90d8509fdefff8966ba238dd3459df50babd2706248b1f131744ccc1cce8",
+    "hash": "00447ba9be25cfaa5561478ef877b1cdbb9742737675b790bc40a18a0c3b02bd",
+    "nonce": 325
+  },
+  {
+    "timestamp": "2025-01-14T20:08:37.336139",
+    "data": {
+      "data": {
+        "temp": 8,
+        "humidity": 16
+      },
+      "timestamp": "2025-01-14T20:08:37.336139",
+      "status": "WARNING: Low temperature",
+      "alerts": []
+    },
+    "previous_hash": "00447ba9be25cfaa5561478ef877b1cdbb9742737675b790bc40a18a0c3b02bd",
+    "hash": "00f918e8d81459bac26d610065ab5fc8cec9c8cdb93610dd97aa328bf5394857",
+    "nonce": 962
+  }
+]

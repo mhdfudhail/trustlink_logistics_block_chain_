@@ -1,0 +1,17 @@
+[
+  {
+    "timestamp": "2025-01-12T21:35:21.059556",
+    "data": {
+      "data": {
+        "temp": 20.0,
+        "humidity": 50.0
+      },
+      "timestamp": "2025-01-12T21:35:21.059556",
+      "status": "Normal conditions",
+      "alerts": []
+    },
+    "previous_hash": "0",
+    "hash": "c13397a40b2d03d07f11e2272cb828e73f1beebd74ba44a3782e2e0fdd715b",
+    "nonce": 0
+  }
+]
