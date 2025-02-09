@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trust-Link Monitoring Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        /* Keeping existing styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #1a237e;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .current-reading {
+            font-size: 2em;
+            font-weight: bold;
+            color: #1a237e;
+            margin: 10px 0;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 400px;
+        }
+        /* New styles for map */
+        .map-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            height: 300px;
+        }
+        .location-display {
+            font-size: 1.2em;
+            margin-top: 10px;
+            text-align: center;
+        }
+        /* Existing table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f5f5f5;
+            color: #1a237e;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .alert-normal { background-color: #4caf50; color: white; }
+        .alert-warning { background-color: #ff9800; color: white; }
+        .alert-critical { background-color: #f44336; color: white; }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.875em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Trust-Link Monitoring Dashboard</h1>
+        <a href="/logout" class="logout-btn">Logout</a>
+    </div>
+
+    <div class="alerts-container" id="alertsContainer"></div>
+
+    <div class="dashboard-container">
+        <div class="card">
+            <h2>Temperature</h2>
+            <div id="currentTemp" class="current-reading">--°C</div>
+            <div id="tempStatus"></div>
+        </div>
+        <div class="card">
+            <h2>Humidity</h2>
+            <div id="currentHumidity" class="current-reading">--%</div>
+            <div id="humidityStatus"></div>
+        </div>
+        <div class="card">
+            <h2>Air Quality</h2>
+            <div id="currentAQI" class="current-reading">-- AQI</div>
+            <div id="aqiStatus"></div>
+        </div>
+        <div class="card">
+            <h2>Vibration Level</h2>
+            <div id="currentVibration" class="current-reading">-- mm/s</div>
+            <div id="vibrationStatus"></div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="environmentalChart"></canvas>
+    </div>
+
+    <div class="map-container">
+        <h2> Location </h2>
+        <div class="location-display">
+            Latitude: <span id="currentLat">--</span>° | 
+            Longitude: <span id="currentLong">--</span>°
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Temp (°C)</th>
+                <th>Humidity (%)</th>
+                <th>AQI</th>
+                <th>Vibration (mm/s)</th>
+                <th>Location</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
+
+    <script>
+        let chart;
+
+        function checkAlerts(data) {
+            const alerts = [];
+            
+            // Temperature alerts
+            if (data.temp > 30) {
+                alerts.push({
+                    type: 'critical',
+                    message: `High Temperature Alert: ${data.temp.toFixed(1)}°C`
+                });
+            }
+            
+            // Humidity alerts
+            if (data.humidity > 80) {
+                alerts.push({
+                    type: 'critical',
+                    message: `High Humidity Alert: ${data.humidity.toFixed(1)}%`
+                });
+            }
+            
+            // Air Quality alerts
+            if (data.air_quality > 300) {
+                alerts.push({
+                    type: 'critical',
+                    message: `Hazardous Air Quality: ${data.air_quality.toFixed(1)} AQI`
+                });
+            } else if (data.air_quality > 150) {
+                alerts.push({
+                    type: 'warning',
+                    message: `Poor Air Quality: ${data.air_quality.toFixed(1)} AQI`
+                });
+            }
+            
+            // Vibration alerts
+            if (data.vibration > 80) {
+                alerts.push({
+                    type: 'critical',
+                    message: `Dangerous Vibration Level: ${data.vibration.toFixed(1)} mm/s`
+                });
+            }
+            
+            return alerts;
+        }
+
+        function getStatusBadgeforTable(data) {
+            if (data.temp > 30 || data.humidity > 80 || data.air_quality > 300 || data.vibration > 80) {
+                return '<span class="status-badge alert-critical">Critical</span>';
+            } else if (data.temp > 25 || data.humidity > 70 || data.air_quality > 150 || data.vibration > 50) {
+                return '<span class="status-badge alert-warning">Warning</span>';
+            }
+            return '<span class="status-badge alert-normal">Normal</span>';
+        }
+        // function getStatusBadge(data) {
+        //     // Check each sensor individually
+        //     const status = {
+        //         temp: checkTemperatureStatus(data.temp),
+        //         humidity: checkHumidityStatus(data.humidity),
+        //         aqi: checkAQIStatus(data.air_quality),
+        //         vibration: checkVibrationStatus(data.vibration)
+        //     };
+            
+        //     // Helper functions for each sensor
+        //     function checkTemperatureStatus(temp) {
+        //         if (temp > 30) return 'critical';
+        //         if (temp > 25) return 'warning';
+        //         return 'normal';
+        //     }
+            
+        //     function checkHumidityStatus(humidity) {
+        //         if (humidity > 80) return 'critical';
+        //         if (humidity > 70) return 'warning';
+        //         return 'normal';
+        //     }
+            
+        //     function checkAQIStatus(aqi) {
+        //         if (aqi > 300) return 'critical';
+        //         if (aqi > 150) return 'warning';
+        //         return 'normal';
+        //     }
+            
+        //     function checkVibrationStatus(vibration) {
+        //         if (vibration > 80) return 'critical';
+        //         if (vibration > 50) return 'warning';
+        //         return 'normal';
+        //     }
+
+        //     return function(sensorType) {
+        //         const statusClass = status[sensorType] || 'normal';
+        //         return `<span class="status-badge alert-${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span>`;
+        //     };
+        // }
+        function checkTemperatureStatus(temp) {
+                if (temp > 30) return '<span class="status-badge alert-critical">Critical</span>';
+                if (temp > 25) return '<span class="status-badge alert-warning">Warning</span>';
+                return '<span class="status-badge alert-normal">Normal</span>';
+            }
+            function checkHumidityStatus(humidity) {
+                if (humidity > 80) return '<span class="status-badge alert-critical">Critical</span>';
+                if (humidity > 70) return '<span class="status-badge alert-warning">Warning</span>';
+                return '<span class="status-badge alert-normal">Normal</span>';
+            }
+            
+            function checkAQIStatus(aqi) {
+                if (aqi > 300) return '<span class="status-badge alert-critical">Critical</span>';
+                if (aqi > 150) return '<span class="status-badge alert-warning">Warning</span>';
+                return '<span class="status-badge alert-normal">Normal</span>';
+            }
+            
+            function checkVibrationStatus(vibration) {
+                if (vibration > 80) return '<span class="status-badge alert-critical">Critical</span>';
+                if (vibration > 50) return '<span class="status-badge alert-warning">Warning</span>';
+                return '<span class="status-badge alert-normal">Normal</span>';
+            }
+
+        function updateCurrentReadings(data) {
+            if (data && data.length > 0) {
+                // Debug log to see the structure
+                
+                
+                // Correct way to access the sensor data
+                // const latest = data[data.length - 1].data.data;
+                const latest = data[data.length - 1];
+                const currentTemp = latest.data.data.temp;
+                const currentHumidity = latest.data.data.humidity;
+                const currentAQI = latest.data.data.air_quality;
+                const currentVibration = latest.data.data.vibration;
+                const currentLat = latest.data.data.latitude;
+                const currentLong = latest.data.data.longitude;
+                // console.log('Latest:', currentTemp);
+                // console.log('Latest:', currentHumidity);
+                // console.log('Latest:', currentAQI);
+                // console.log('Latest:', currentVibration);
+                // console.log('Latest:', currentLat);
+                // console.log('Latest:', currentLong);
+                
+                // Add null checks
+                if (latest) {
+                    document.getElementById('currentTemp').textContent = 
+                        currentTemp ? `${currentTemp.toFixed(1)}°C` : '--°C';
+                    document.getElementById('currentHumidity').textContent = 
+                        currentHumidity ? `${currentHumidity.toFixed(1)}%` : '--%';
+                    document.getElementById('currentAQI').textContent = 
+                        currentAQI ? `${currentAQI.toFixed(1)}` : '--';
+                    document.getElementById('currentVibration').textContent = 
+                        currentVibration ? `${currentVibration.toFixed(1)}` : '--';
+                    document.getElementById('currentLat').textContent = 
+                        currentLat ? currentLat.toFixed(4) : '--';
+                    document.getElementById('currentLong').textContent = 
+                        currentLong ? currentLong.toFixed(4) : '--';
+                    
+                    // Update status badges only if we have valid data
+                    // const getStatusBadgeForSensor = getStatusBadge(latest);
+            
+                    // // Update status badges with specific status for each sensor
+                    // console.log('temp:', getStatusBadgeForSensor('temp'));
+                    // console.log('humid:', getStatusBadgeForSensor('humidity'));
+                    // console.log('aqi:', getStatusBadgeForSensor('aqi'));
+                    // console.log('vi:', getStatusBadgeForSensor('vibration'));
+                    // console.log('Latest:', currentLong);
+                    document.getElementById('tempStatus').innerHTML = checkTemperatureStatus(currentTemp);
+                    document.getElementById('humidityStatus').innerHTML = checkHumidityStatus(currentHumidity);
+                    document.getElementById('aqiStatus').innerHTML = checkAQIStatus(currentAQI);
+                    document.getElementById('vibrationStatus').innerHTML = checkVibrationStatus(currentVibration);
+           
+                    //  // Update status badges only if we have valid data
+                    //  const status = getStatusBadge(latest.data.data);
+                    // document.getElementById('tempStatus').innerHTML = status;
+                    // document.getElementById('humidityStatus').innerHTML = status;
+                    // document.getElementById('aqiStatus').innerHTML = status;
+                    // document.getElementById('vibrationStatus').innerHTML = status;
+                    
+                    // Update alerts
+                    const alerts = checkAlerts(latest.data.data);
+                    document.getElementById('alertsContainer').innerHTML = alerts.map(alert => 
+                        `<div class="alert alert-${alert.type}">${alert.message}</div>`
+                    ).join('');
+                }
+            }
+        }
+
+        // function updateCurrentReadings(data) {
+        //     if (data && data.length > 0) {
+        //         const latest = data[data.length - 1].data.data;
+                
+        //         // Update current readings
+        //         document.getElementById('currentTemp').textContent = `${latest.temp.toFixed(1)}°C`;
+        //         document.getElementById('currentHumidity').textContent = `${latest.humidity.toFixed(1)}%`;
+        //         document.getElementById('currentAQI').textContent = `${latest.air_quality.toFixed(1)}`;
+        //         document.getElementById('currentVibration').textContent = `${latest.vibration.toFixed(1)}`;
+        //         document.getElementById('currentLat').textContent = latest.latitude.toFixed(4);
+        //         document.getElementById('currentLong').textContent = latest.longitude.toFixed(4);
+                
+        //         // Update status badges
+        //         const status = getStatusBadge(latest);
+        //         document.getElementById('tempStatus').innerHTML = status;
+        //         document.getElementById('humidityStatus').innerHTML = status;
+        //         document.getElementById('aqiStatus').innerHTML = status;
+        //         document.getElementById('vibrationStatus').innerHTML = status;
+                
+        //         // Update alerts
+        //         const alerts = checkAlerts(latest);
+        //         document.getElementById('alertsContainer').innerHTML = alerts.map(alert => 
+        //             `<div class="alert alert-${alert.type}">${alert.message}</div>`
+        //         ).join('');
+        //     }
+        // }
+
+        function updateChart(data) {
+            const timestamps = data.map(block => block.timestamp);
+            const sensorData = {
+                temp: data.map(block => block.data.data.temp),
+                humidity: data.map(block => block.data.data.humidity),
+                aqi: data.map(block => block.data.data.air_quality),
+                vibration: data.map(block => block.data.data.vibration)
+            };
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            const ctx = document.getElementById('environmentalChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: timestamps,
+                    datasets: [
+                        {
+                            label: 'Temperature (°C)',
+                            data: sensorData.temp,
+                            borderColor: 'rgb(255, 99, 132)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Humidity (%)',
+                            data: sensorData.humidity,
+                            borderColor: 'rgb(54, 162, 235)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Air Quality (AQI)',
+                            data: sensorData.aqi,
+                            borderColor: 'rgb(75, 192, 192)',
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Vibration (mm/s)',
+                            data: sensorData.vibration,
+                            borderColor: 'rgb(153, 102, 255)',
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Temperature & Humidity'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'AQI & Vibration'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateTable(data) {
+            const tableBody = document.getElementById('dataTable');
+            tableBody.innerHTML = data.map(block => {
+                // const sensorData = block.data.data;
+                // const block = data[data.length - 1];
+                const timestamp = block.timestamp;
+                const currentTemp = block.data.data.temp;
+                const currentHumidity = block.data.data.humidity;
+                const currentAQI = block.data.data.air_quality;
+                const currentVibration = block.data.data.vibration;
+                const currentLat = block.data.data.latitude;
+                const currentLong = block.data.data.longitude;
+                // console.log('Latest:', timestamp);
+                return `
+                    <tr>
+                        <td>${timestamp}</td>
+                        <td>${currentTemp.toFixed(1)}°C</td>
+                        <td>${currentHumidity.toFixed(1)}%</td>
+                        <td>${currentAQI}</td>
+                        <td>${currentVibration}</td>
+                        <td>${currentLat}°, ${currentLong}°</td>
+                        <td>${getStatusBadgeforTable(block.data.data)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateData() {
+            fetch('/get_data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        updateCurrentReadings(data);
+                        updateChart(data);
+                        updateTable(data);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Update data every 10 seconds
+        setInterval(updateData, 10000);
+
+        // Initial update
+        updateData();
+    </script>
+</body>
+</html>
