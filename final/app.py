@@ -5,9 +5,16 @@ import time
 from functools import wraps
 import os
 import random
+import serial
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
+
+ser = serial.Serial(
+    port='COM10',  
+    baudrate=9600,        
+    timeout=1             
+    )
 
 USERS = {
     'a': '123'
@@ -21,7 +28,7 @@ def login_required(f):
         if 'username' not in session:
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-    return decorated_function
+    return decorated_function 
 
 def generate_mock_sensor_data():
     return {
@@ -32,17 +39,36 @@ def generate_mock_sensor_data():
         "latitude": random.uniform(35.0, 35.1),    
         "longitude": random.uniform(139.7, 139.8)  
     }
+def read_arduino_data():
+    if ser.in_waiting > 0:
+        line = ser.readline().decode('utf-8').strip()
+        
+        values = line.split(',')
+        
+        if len(values):  
+            parsed_values = [float(value) for value in values]
+            # print(parsed_values)
+            return {
+                "temp": parsed_values[0],            
+                "humidity": parsed_values[1],        
+                "air_quality": parsed_values[2],    
+                "vibration": parsed_values[3],        
+                "latitude": parsed_values[4],    
+                "longitude": parsed_values[5] 
+            }
+    
 
 def read_sensor_data():
    
     try:
-        return generate_mock_sensor_data()
+        return read_arduino_data()
+        # return generate_mock_sensor_data()
     except Exception as e:
         print(f"Error reading sensors: {str(e)}")
         return None
 
 def background_data_collection():
-    while True:
+    while True:     
         sensor_data = read_sensor_data()
         if sensor_data:
             blockchain.add_block(sensor_data)
