@@ -208,54 +208,40 @@
             
             return alerts;
         }
-
         function getStatusBadgeforTable(data) {
-            if (data.temp > 30 || data.humidity > 80 || data.air_quality > 300 || data.vibration > 80) {
-                return '<span class="status-badge alert-critical">Critical</span>';
-            } else if (data.temp > 25 || data.humidity > 70 || data.air_quality > 150 || data.vibration > 50) {
-                return '<span class="status-badge alert-warning">Warning</span>';
+            const temp = data.temp || 0;
+            const humidity = data.humidity || 0;
+            const air_quality = data.air_quality || 0;
+            const vibration = data.vibration || 0;
+            
+            
+            const criticalConditions = [];
+            const warningConditions = [];
+            // const warningConditions = [];
+            
+            
+            if (temp > 30) criticalConditions.push("Temperature");
+            else if (temp > 25) warningConditions.push("Temperature");
+            
+            if (humidity > 80) criticalConditions.push("Humidity");
+            else if (humidity > 70) warningConditions.push("Humidity");
+            
+            if (air_quality > 300) criticalConditions.push("Air Quality");
+            else if (air_quality > 150) warningConditions.push("Air Quality");
+            
+            if (vibration > 80) criticalConditions.push("Vibration");
+            else if (vibration > 50) warningConditions.push("Vibration");
+            
+            
+            if (criticalConditions.length > 0) {
+                return `<span class="status-badge alert-critical">Critical: ${criticalConditions.join(", ")}</span>`;
+            } else if (warningConditions.length > 0) {
+                return `<span class="status-badge alert-warning">Warning: ${warningConditions.join(", ")}</span>`;
             }
+            
             return '<span class="status-badge alert-normal">Normal</span>';
         }
-        // function getStatusBadge(data) {
-        //     // Check each sensor individually
-        //     const status = {
-        //         temp: checkTemperatureStatus(data.temp),
-        //         humidity: checkHumidityStatus(data.humidity),
-        //         aqi: checkAQIStatus(data.air_quality),
-        //         vibration: checkVibrationStatus(data.vibration)
-        //     };
-            
-        //     // Helper functions for each sensor
-        //     function checkTemperatureStatus(temp) {
-        //         if (temp > 30) return 'critical';
-        //         if (temp > 25) return 'warning';
-        //         return 'normal';
-        //     }
-            
-        //     function checkHumidityStatus(humidity) {
-        //         if (humidity > 80) return 'critical';
-        //         if (humidity > 70) return 'warning';
-        //         return 'normal';
-        //     }
-            
-        //     function checkAQIStatus(aqi) {
-        //         if (aqi > 300) return 'critical';
-        //         if (aqi > 150) return 'warning';
-        //         return 'normal';
-        //     }
-            
-        //     function checkVibrationStatus(vibration) {
-        //         if (vibration > 80) return 'critical';
-        //         if (vibration > 50) return 'warning';
-        //         return 'normal';
-        //     }
-
-        //     return function(sensorType) {
-        //         const statusClass = status[sensorType] || 'normal';
-        //         return `<span class="status-badge alert-${statusClass}">${statusClass.charAt(0).toUpperCase() + statusClass.slice(1)}</span>`;
-        //     };
-        // }
+        
         function checkTemperatureStatus(temp) {
                 if (temp > 30) return '<span class="status-badge alert-critical">Critical</span>';
                 if (temp > 25) return '<span class="status-badge alert-warning">Warning</span>';
@@ -345,32 +331,7 @@
             }
         }
 
-        // function updateCurrentReadings(data) {
-        //     if (data && data.length > 0) {
-        //         const latest = data[data.length - 1].data.data;
-                
-        //         // Update current readings
-        //         document.getElementById('currentTemp').textContent = `${latest.temp.toFixed(1)}°C`;
-        //         document.getElementById('currentHumidity').textContent = `${latest.humidity.toFixed(1)}%`;
-        //         document.getElementById('currentAQI').textContent = `${latest.air_quality.toFixed(1)}`;
-        //         document.getElementById('currentVibration').textContent = `${latest.vibration.toFixed(1)}`;
-        //         document.getElementById('currentLat').textContent = latest.latitude.toFixed(4);
-        //         document.getElementById('currentLong').textContent = latest.longitude.toFixed(4);
-                
-        //         // Update status badges
-        //         const status = getStatusBadge(latest);
-        //         document.getElementById('tempStatus').innerHTML = status;
-        //         document.getElementById('humidityStatus').innerHTML = status;
-        //         document.getElementById('aqiStatus').innerHTML = status;
-        //         document.getElementById('vibrationStatus').innerHTML = status;
-                
-        //         // Update alerts
-        //         const alerts = checkAlerts(latest);
-        //         document.getElementById('alertsContainer').innerHTML = alerts.map(alert => 
-        //             `<div class="alert alert-${alert.type}">${alert.message}</div>`
-        //         ).join('');
-        //     }
-        // }
+       
 
         function updateChart(data) {
             const timestamps = data.map(block => block.timestamp);
@@ -443,12 +404,11 @@
                 }
             });
         }
-
         function updateTable(data) {
             const tableBody = document.getElementById('dataTable');
-            tableBody.innerHTML = data.map(block => {
-                // const sensorData = block.data.data;
-                // const block = data[data.length - 1];
+            const reversedData = [...data].reverse();
+            
+            tableBody.innerHTML = reversedData.map(block => {
                 const timestamp = block.timestamp;
                 const currentTemp = block.data.data.temp;
                 const currentHumidity = block.data.data.humidity;
@@ -456,20 +416,21 @@
                 const currentVibration = block.data.data.vibration;
                 const currentLat = block.data.data.latitude;
                 const currentLong = block.data.data.longitude;
-                // console.log('Latest:', timestamp);
+                
                 return `
                     <tr>
                         <td>${timestamp}</td>
                         <td>${currentTemp.toFixed(1)}°C</td>
                         <td>${currentHumidity.toFixed(1)}%</td>
-                        <td>${currentAQI}</td>
-                        <td>${currentVibration}</td>
+                        <td>${currentAQI?currentAQI.toFixed(2) : '--'}</td>
+                        <td>${currentVibration ? currentVibration.toFixed(2) : '--'}</td>
                         <td>${currentLat}°, ${currentLong}°</td>
                         <td>${getStatusBadgeforTable(block.data.data)}</td>
                     </tr>
                 `;
             }).join('');
         }
+
 
         function updateData() {
             fetch('/get_data')
